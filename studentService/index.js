@@ -1,0 +1,24 @@
+const express = require('express');
+const dotEnv = require('dotenv');
+const connectDB = require('./config/db');
+
+const studentRoutes = require('./routes/studentRoute');
+
+
+dotEnv.config();
+
+
+const app = express();
+
+
+connectDB();
+
+
+app.use(express.json());
+app.use("/api/students", studentRoutes);
+
+const PORT = process.env.PORT || 5002;
+
+app.listen(PORT, () => {
+    console.log(`studentService is running on port ${PORT}`);
+});
