@@ -8,7 +8,7 @@ const {
   fetchCourses,
 } = require("./auth/util");
 const { ROLES } = require("../../consts");
- 
+
 // Create a new enrollment
 router.post(
   "/",
@@ -16,30 +16,30 @@ router.post(
   async (req, res) => {
     try {
       const { student, course } = req.body;
- 
+
       if (!student || !course) {
         return res
           .status(400)
           .json({ message: "Student ID and Course ID are required" });
       }
- 
+
       // Pass the 'req' object to forward the auth token
       const students = await fetchStudents(req);
       const studentExists = students.some(s => s._id.toString() === student.toString()); 
       if (!studentExists) {
         return res.status(404).json({ message: "Student with the provided ID does not exist" });
       }
- 
+
       // Pass the 'req' object to forward the auth token
       const courses = await fetchCourses(req);
       const courseExists = courses.some(c => c._id.toString() === course.toString());
       if (!courseExists) {
         return res.status(404).json({ message: "Course with the provided ID does not exist" });
       }
- 
+
       const enrollment = new Enrollment({ student: student, course: course });
       await enrollment.save();
- 
+
       res.status(201).json(enrollment);
     } catch (error) {
       console.error("Error creating enrollment:", error);
@@ -53,7 +53,7 @@ router.post(
     }
   }
 );
- 
+
 // Get all enrollments (Protected for Admin/Professor)
 router.get(
   "/",
@@ -71,7 +71,7 @@ router.get(
     }
   }
 );
- 
+
 // Get a specific enrollment by ID
 router.get(
   "/:id",
@@ -80,15 +80,16 @@ router.get(
     try {
         const enrollmentId = req.params.id;
         const enrollment = await Enrollment.findById(enrollmentId).populate('student', 'name email').populate('course', 'name code');
+        
         if (!enrollment) {
             return res.status(404).json({ message: "Enrollment not found" });
         }
- 
+
         // Ownership check for students
         if (req.user.roles.includes(ROLES.STUDENT) && enrollment.student._id.toString() !== req.user.userId) {
              return res.status(403).json({ message: "Access forbidden: You can only view your own enrollments." });
         }
- 
+
         return res.status(200).json(enrollment);
     } catch (error) {
       console.error("Error fetching enrollment by ID:", error);
@@ -102,7 +103,7 @@ router.get(
     }
   }
 );
- 
+
 // Get enrollments by student ID
 router.get(
   "/student/:id", 
@@ -112,12 +113,13 @@ router.get(
     try {
       let enrollments = await Enrollment.find({ student: req.params.id })
                                         .populate('course', 'name code description schedule');
- 
+
       if (!enrollments || enrollments.length === 0) {
         return res
           .status(404)
           .json({ message: "No enrollments found for this student ID" });
       }
+      
       res.status(200).json(enrollments);
     } catch (error) {
       console.error("Error fetching enrollments for student:", error);
@@ -131,7 +133,7 @@ router.get(
     }
   }
 );
- 
+
 // Get enrollments by course ID
 router.get(
   "/course/:id",
@@ -141,12 +143,13 @@ router.get(
       const courseId = req.params.id;
       let enrollments = await Enrollment.find({ course: courseId })
                                         .populate('student', 'name email');
- 
+
       if (!enrollments || enrollments.length === 0) {
         return res
           .status(404)
           .json({ message: "No enrollments found for this course ID" });
       }
+      
       res.status(200).json(enrollments);
     } catch (error) {
       console.error("Error fetching enrollments for course:", error);
@@ -160,7 +163,7 @@ router.get(
     }
   }
 );
- 
+
 // Delete an enrollment by ID
 router.delete(
   "/:id",
@@ -169,18 +172,18 @@ router.delete(
     try {
       const enrollmentId = req.params.id;
       const enrollment = await Enrollment.findById(enrollmentId);
- 
+
       if (!enrollment) {
         return res.status(404).json({ message: "Enrollment not found" });
       }
- 
+
       // Ownership Check for Students:
       if (req.user.roles.includes(ROLES.STUDENT) && enrollment.student.toString() !== req.user.userId) {
          return res.status(403).json({ message: "Access forbidden: You can only delete your own enrollments." });
       }
- 
+
       await Enrollment.findByIdAndDelete(enrollmentId);
- 
+
       res
         .status(200)
         .json({ message: "Enrollment deleted successfully", enrollment });
@@ -198,5 +201,5 @@ router.delete(
     }
   }
 );
- 
+
 module.exports = router;
