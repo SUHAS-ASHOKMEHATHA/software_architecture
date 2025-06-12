@@ -53,7 +53,7 @@ router.get("/internal/all", verifyRole([ROLES.AUTH_SERVICE]), async (req, res) =
 // Protected: Only ADMINs can get all professors.
 router.get(
     "/",
-    verifyRole([ROLES.ADMIN]),
+    verifyRole([ROLES.ADMIN, ROLES.PROFESSOR]),
     async (req, res) => {
     try {
         const professors = await Professor.find().select('-password');

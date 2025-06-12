@@ -36,7 +36,9 @@ router.post("/", async (req, res) => {
 });
 
 // GET all students
-router.get("/", async (req, res) => {
+router.get("/", 
+    async (req, res) => {
+ 
     try {
         const students = await Student.find();
         return res.status(200).json(students);
